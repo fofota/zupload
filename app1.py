@@ -1,6 +1,13 @@
 import streamlit as st
 import pandas as pd
 from bs4 import BeautifulSoup
+import boto3
+
+# AWS S3 credentials and settings
+AWS_ACCESS_KEY_ID = 'AKIA2UC3FZENMNUVYZEL'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_REGION = 'eu-north-1'
+S3_BUCKET_NAME = 'zupload1015'
 
 # Function to parse HTML table into a DataFrame
 def parse_html_table(html_content):
@@ -12,6 +19,12 @@ def parse_html_table(html_content):
     table = soup.find('table')
     df = pd.read_html(str(table))[0]
     return df
+
+# Function to upload CSV to AWS S3
+def upload_to_s3(df, bucket, filename):
+    csv_data = df.to_csv(index=False).encode('utf-8')
+    s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
+    s3.put_object(Bucket=bucket, Key=filename, Body=csv_data)
 
 # Streamlit app
 def main():
@@ -31,8 +44,14 @@ def main():
         st.write("Parsed DataFrame:")
         st.write(df)
     if st.button("Save as CSV"):
-            df.to_csv("parsed_data.csv", index=False)
-            st.success("DataFrame saved as CSV: parsed_data.csv")
+            # Save CSV locally
+            local_csv_path = "parsed_data.csv"
+            df.to_csv(local_csv_path, index=False)
+            
+            # Upload CSV to AWS S3
+            upload_to_s3(df, S3_BUCKET_NAME, "parsed_data.csv")
+            
+            st.success("DataFrame saved as CSV: parsed_data.csv and uploaded to AWS S3")
 
 if __name__ == "__main__":
     main()
