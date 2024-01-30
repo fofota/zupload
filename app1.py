@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 from bs4 import BeautifulSoup
 import boto3
+import requests
+from datetime import datetime
 
 # AWS S3 credentials and settings
 AWS_ACCESS_KEY_ID = 'AKIA2UC3FZENMNUVYZEL'
@@ -51,6 +53,12 @@ def main():
             # Upload CSV to AWS S3
             upload_to_s3(df, S3_BUCKET_NAME, "parsed_data.csv")
             
+            # Add timestamp or version number to the URL to force cache refresh
+            timestamp = int(datetime.timestamp(datetime.now()))
+            url = f"https://zsquad-868232fac2a5.herokuapp.com/update_data?timestamp={timestamp}"
+            requests.get(url)  # Trigger Flask app update
+
+
             st.success("DataFrame saved as CSV: parsed_data.csv and uploaded to AWS S3")
 
 if __name__ == "__main__":
