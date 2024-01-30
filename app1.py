@@ -30,12 +30,13 @@ def upload_to_s3(df, bucket, filename):
     s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
     s3.put_object(Bucket=bucket, Key=filename, Body=csv_data)
 
-def restart_dynos(heroku_api_key, app_name):
-    # Authenticate with Heroku CLI
-    subprocess.run(["heroku", "auth:token", heroku_api_key])
+def restart_dynos(api_key, app_name):
+    # Authenticate with Heroku API
+    heroku_conn = heroku3.from_key(api_key)
+    app = heroku_conn.apps()[app_name]
 
-    # Restart dynos using Heroku CLI
-    subprocess.run(["heroku", "dyno:restart", "--app", app_name])
+    # Restart dynos using Heroku API
+    app.restart()
 
 # Streamlit app
 def main():
