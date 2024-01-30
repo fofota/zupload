@@ -31,10 +31,11 @@ def upload_to_s3(df, bucket, filename):
     s3.put_object(Bucket=bucket, Key=filename, Body=csv_data)
 
 def restart_dynos(heroku_api_key, app_name):
-    # Restart dynos using Heroku API
-    headers = {'Authorization': f'Bearer {heroku_api_key}'}
-    url = f'https://api.heroku.com/apps/{app_name}/dynos'
-    requests.delete(url, headers=headers)
+    # Authenticate with Heroku CLI
+    subprocess.run(["heroku", "auth:token", heroku_api_key])
+
+    # Restart dynos using Heroku CLI
+    subprocess.run(["heroku", "dyno:restart", "--app", app_name])
 
 # Streamlit app
 def main():
