@@ -4,12 +4,14 @@ from bs4 import BeautifulSoup
 import boto3
 import requests
 from datetime import datetime
+import subprocess
+import os
 
-# AWS S3 credentials and settings
-AWS_ACCESS_KEY_ID = 'AKIA2UC3FZENMNUVYZEL'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_REGION = 'eu-north-1'
-S3_BUCKET_NAME = 'zupload1015'
+# AWS S3 credentials and settings (uses 'config vars' in Heroku)
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_REGION = os.environ.get('AWS_REGION')
+S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 # Function to parse HTML table into a DataFrame
 def parse_html_table(html_content):
@@ -27,6 +29,13 @@ def upload_to_s3(df, bucket, filename):
     csv_data = df.to_csv(index=False).encode('utf-8')
     s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY, region_name=AWS_REGION)
     s3.put_object(Bucket=bucket, Key=filename, Body=csv_data)
+
+def restart_dynos(heroku_api_key, app_name):
+    # Authenticate with Heroku CLI
+    subprocess.run(["heroku", "auth:token", heroku_api_key])
+
+    # Restart dynos using Heroku CLI
+    subprocess.run(["heroku", "dyno:restart", "--app", app_name])
 
 # Streamlit app
 def main():
@@ -53,11 +62,15 @@ def main():
             # Upload CSV to AWS S3
             upload_to_s3(df, S3_BUCKET_NAME, "parsed_data.csv")
             
+            # Restart dynos in the zsquad app
+            HEROKU_API_KEY = os.environ.get('HEROKU_API_KEY')
+            ZSQUAD_APP_NAME = os.environ.get('ZSQUAD_APP_NAME')
+            restart_dynos(HEROKU_API_KEY, ZSQUAD_APP_NAME)
+
             # Add timestamp or version number to the URL to force cache refresh
             timestamp = int(datetime.timestamp(datetime.now()))
             url = f"https://zsquad-868232fac2a5.herokuapp.com/update_data?timestamp={timestamp}"
             requests.get(url)  # Trigger Flask app update
-
 
             st.success(f"DataFrame saved as CSV: parsed_data.csv and uploaded to AWS S3\nUpdate URL: {url}")
 
