@@ -6,6 +6,7 @@ import requests
 from datetime import datetime
 import subprocess
 import os
+import heroku3
 
 # AWS S3 credentials and settings (uses 'config vars' in Heroku)
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
