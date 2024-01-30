@@ -33,7 +33,7 @@ def upload_to_s3(df, bucket, filename):
 def restart_dynos(heroku_api_key, app_name):
     # Restart dynos using Heroku API
     headers = {'Authorization': f'Bearer {heroku_api_key}'}
-    url = f'https://api.heroku.com/apps/{app_name}/dynos'
+    url = f'https://api.heroku.com/apps/{ZSQUAD_APP_NAME}/dynos'
     requests.delete(url, headers=headers)
 
 # Streamlit app
