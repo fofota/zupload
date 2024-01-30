@@ -59,7 +59,7 @@ def main():
             requests.get(url)  # Trigger Flask app update
 
 
-            st.success("DataFrame saved as CSV: parsed_data.csv and uploaded to AWS S3")
+            st.success(f"DataFrame saved as CSV: parsed_data.csv and uploaded to AWS S3\nUpdate URL: {url}")
 
 if __name__ == "__main__":
     main()
